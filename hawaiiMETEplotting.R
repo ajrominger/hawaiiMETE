@@ -83,8 +83,8 @@ for(troph in c('D', 'H', 'P')) {
         plot(mete.byTS[[which(byTrophBySite$trophic==troph & 
                                   byTrophBySite$Site==site)]]$ipd, 
              ptype='rad', add.legend=FALSE,
-             log='y', yaxt=ifelse(site=='VO', 's', 'n'), xaxt=ifelse(troph=='P', 's', 'n'), 
-             xlim=c(1, max(byTrophBySite$S0)), ylim=c(1, max(byTrophBySite$maxN)))
+             log='xy', yaxt=ifelse(site=='VO', 's', 'n'), xaxt=ifelse(troph=='P', 's', 'n'), 
+             xlim=c(1, max(byTrophBySite$N0)), ylim=c(1, max(byTrophBySite$maxN)))
         
         if(site=='KA') mtext(troph, side=4, line=1)
         if(troph=='D') mtext(site, side=3, line=1)
