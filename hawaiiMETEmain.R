@@ -23,6 +23,12 @@ mete.byTS <- apply(byTrophBySite, 1, function(s) {
 })
 
 
+byTrophBySite <- cbind(byTrophBySite,
+                       t(sapply(mete.byTS, function(x) {
+                           c(x$sad$state.var, maxN=max(x$sad$data), maxE=max(x$ipd$data))
+                       })))
+
+
 ## plot SAD
 pdf(file='fig_allSAD.pdf', width=5, height=5)
 par(mar=rep(0.1, 4), oma=c(4, 4, 0, 0)+0.1)
@@ -32,7 +38,8 @@ for(troph in c('D', 'H', 'P')) {
     for(site in c('VO', 'LA', 'KH', 'MO', 'KA')) {
         plot(mete.byTS[[which(byTrophBySite$trophic==troph & 
                                   byTrophBySite$Site==site)]]$sad, 
-             ptype='rad', log='y', xaxt='n', yaxt='n', add.legend=FALSE)
+             ptype='rad', log='y', xaxt='n', yaxt='n', add.legend=FALSE,
+             xlim=c(1, max(byTrophBySite$S0)), ylim=c(1, max(byTrophBySite$maxN)))
         legend('topright', legend=paste(site, troph))
     }
 }
