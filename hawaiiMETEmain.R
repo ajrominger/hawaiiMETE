@@ -39,3 +39,20 @@ for(troph in c('D', 'H', 'P')) {
 
 dev.off()
 
+
+## plot IPD
+pdf(file='fig_allIPD.pdf', width=5, height=5)
+par(mar=rep(0.1, 4), oma=c(4, 4, 0, 0)+0.1)
+layout(matrix(1:(3*5), nrow=3, byrow=TRUE))
+
+for(troph in c('D', 'H', 'P')) {
+    for(site in c('VO', 'LA', 'KH', 'MO', 'KA')) {
+        plot(mete.byTS[[which(byTrophBySite$trophic==troph & 
+                                  byTrophBySite$Site==site)]]$ipd, 
+             ptype='rad', log='y', xaxt='n', yaxt='n', add.legend=FALSE)
+        legend('topright', legend=paste(site, troph))
+    }
+}
+
+dev.off()
+
