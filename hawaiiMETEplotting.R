@@ -6,6 +6,8 @@ devtools::load_all('~/Dropbox/Research/meteR')
 
 setwd('~/Dropbox/Research/hawaiiMETE')
 
+site.info <- read.csv('~/Research/data/Gruner/guner_site.csv')
+
 source('mete.byTS.RData')
 
 byTrophBySite <- cbind(byTrophBySite,
@@ -13,6 +15,8 @@ byTrophBySite <- cbind(byTrophBySite,
                            c(x$sad$state.var, maxN=max(x$sad$data), maxE=max(x$ipd$data))
                        })))
 
+byTrophBySite$siteAge <- site.info$age[match(byTrophBySite$Site, site.info$code)]
+byTrophBySite$islandAge <- site.info$island.age[match(byTrophBySite$Site, site.info$code)]
 
 ## ===========================================
 ## plot SAD
@@ -38,6 +42,14 @@ for(troph in c('D', 'H', 'P')) {
 }
 
 dev.off()
+
+
+## plot z-score for SAD
+## get z scores for SAD
+sad.z <- lapply(mete.byTS, function(x) logLikZ.meteDist(x$sad, nrep=999, return.sim=TRUE))
+sad.zcore <- sapply(sad.z, function(x) x$z)
+
+plot()
 
 ## ===========================================
 ## plot IPD
