@@ -1,4 +1,7 @@
-## load needed packages
+## ===========================================
+## set-up
+## ===========================================
+
 devtools::load_all('~/Dropbox/Research/meteR')
 
 setwd('~/Dropbox/Research/hawaiiMETE')
@@ -11,7 +14,11 @@ byTrophBySite <- cbind(byTrophBySite,
                        })))
 
 
+## ===========================================
 ## plot SAD
+## ===========================================
+
+## SAD rank plots
 pdf(file='fig_allSAD.pdf', width=6, height=4)
 
 par(mar=rep(0.1, 4), oma=c(4, 4, 2, 2)+0.1)
@@ -32,8 +39,11 @@ for(troph in c('D', 'H', 'P')) {
 
 dev.off()
 
-
+## ===========================================
 ## plot IPD
+## ===========================================
+
+## IPD rank plots
 pdf(file='fig_allIPD.pdf', width=6, height=4)
 
 par(mar=rep(0.1, 4), oma=c(4, 4, 2, 2)+0.1)
@@ -53,4 +63,5 @@ for(troph in c('D', 'H', 'P')) {
 }
 
 dev.off()
+
 
