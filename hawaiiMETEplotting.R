@@ -8,7 +8,8 @@ setwd('~/Dropbox/Research/hawaiiMETE')
 
 site.info <- read.csv('~/Research/data/Gruner/guner_site.csv')
 
-source('mete.byTS.RData')
+load('mete.byTS.RData')
+source('~/R_functions/logAxis.R')
 
 byTrophBySite <- cbind(byTrophBySite,
                        t(sapply(mete.byTS, function(x) {
@@ -47,9 +48,25 @@ dev.off()
 ## plot z-score for SAD
 ## get z scores for SAD
 sad.z <- lapply(mete.byTS, function(x) logLikZ.meteDist(x$sad, nrep=999, return.sim=TRUE))
-sad.zcore <- sapply(sad.z, function(x) x$z)
+sad.zscore <- sapply(sad.z, function(x) x$z)
 
-plot()
+pdf('fig_sad_zscore.pdf', width=5, height=5)
+
+layout(matrix(1:3, nrow=3))
+par(mar=rep(0.1, 4), oma=c(4, 4, 0, 2)+0.1)
+
+for(troph in c('D', 'H', 'P')) {
+    dat <- cbind(byTrophBySite$siteAge[byTrophBySite$trophic==troph], 
+                 sad.zscore[byTrophBySite$trophic==troph])
+    dat <- dat[order(dat[, 1]), ]
+    plot(dat, type='b', log='x', ylim=c(0, 2.5), xaxt='n')
+    mtext(troph, side=4, line=1)
+}
+logAxis(1)
+axis(1, at=5)
+
+dev.off()
+
 
 ## ===========================================
 ## plot IPD
