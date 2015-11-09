@@ -6,7 +6,7 @@ setwd('~/Dropbox/Research/hawaiiMETE')
 ## read cleaned data from Gruner 2007 Syst Biol
 x <- read.csv('~/Research/data/Gruner/gruner_clean.csv')
 
-## vectors holding all unique combinations of trophic, site and tree factors
+## data.frames holding all unique combinations of trophic, site and tree factors
 byTrophBySite <- unique(x[, c('trophic', 'Site')])
 byTrophBySite <- byTrophBySite[!(byTrophBySite$trophic %in% c('U', 'T')), ]
 
@@ -23,4 +23,4 @@ mete.byTS <- apply(byTrophBySite, 1, function(s) {
 
 
 ## save mete objects
-save(mete.byTS, file='mete.byTS.RData')
+save(mete.byTS, byTrophBySite, byTrophBySiteByTree, file='mete.byTS.RData')
