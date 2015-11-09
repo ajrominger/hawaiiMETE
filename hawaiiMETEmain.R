@@ -5,7 +5,6 @@ setwd('~/Dropbox/Research/hawaiiMETE')
 
 ## read cleaned data from Gruner 2007 Syst Biol
 x <- read.csv('~/Research/data/Gruner/gruner_clean.csv')
-site.info <- read.csv('~/Research/data/Gruner/guner_site.csv')
 
 ## vectors holding all unique combinations of trophic, site and tree factors
 byTrophBySite <- unique(x[, c('trophic', 'Site')])
