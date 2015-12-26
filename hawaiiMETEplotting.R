@@ -33,9 +33,15 @@ for(troph in c('D', 'H', 'P')) {
     for(site in c('VO', 'LA', 'KH', 'MO', 'KA')) {
         plot(mete.byTS[[which(byTrophBySite$trophic==troph & 
                                   byTrophBySite$Site==site)]]$sad, 
-             ptype='rad', add.legend=FALSE,
-             log='y', yaxt=ifelse(site=='VO', 's', 'n'), xaxt=ifelse(troph=='P', 's', 'n'), 
-             xlim=c(1, max(byTrophBySite$S0)), ylim=c(1, max(byTrophBySite$maxN)))
+             ptype='cdf', add.legend=FALSE,
+             yaxt=ifelse(site=='VO', 's', 'n'), xaxt=ifelse(troph=='P', 's', 'n'), 
+#              log='y', 
+             log='x', 
+#             xlim=c(1, max(byTrophBySite$S0)),
+             xlim=c(1, max(byTrophBySite$maxN)),
+#             ylim=c(1, max(byTrophBySite$maxN))
+             ylim=0:1
+             )
         
         if(site=='KA') mtext(troph, side=4, line=1)
         if(troph=='D') mtext(site, side=3, line=1)
@@ -47,8 +53,9 @@ dev.off()
 
 ## plot z-score for SAD
 ## get z scores for SAD
-sad.z <- lapply(mete.byTS, function(x) logLikZ.meteDist(x$sad, nrep=999, return.sim=TRUE))
+sad.z <- lapply(mete.byTS, function(x) logLikZ(x$sad, nrep=999, return.sim=TRUE, type='cumulative'))
 sad.zscore <- sapply(sad.z, function(x) x$z)
+sad.obs <- sapply(sad.z, function(x) x$obs)
 
 pdf('fig_sad_zscore.pdf', width=5, height=5)
 
@@ -59,7 +66,10 @@ for(troph in c('D', 'H', 'P')) {
     dat <- cbind(byTrophBySite$siteAge[byTrophBySite$trophic==troph], 
                  sad.zscore[byTrophBySite$trophic==troph])
     dat <- dat[order(dat[, 1]), ]
-    plot(dat, type='b', log='x', ylim=c(0, 2.5), xaxt='n')
+    plot(dat, type='b', log='x', 
+         ylim=c(0, 2.25), 
+         xaxt='n')
+    abline(h=2, lty=2, col='gray')
     mtext(troph, side=4, line=1)
 }
 logAxis(1)
