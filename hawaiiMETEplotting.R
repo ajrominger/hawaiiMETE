@@ -64,7 +64,7 @@ par(mar=rep(0.1, 4), oma=c(4, 4, 0, 2)+0.1)
 
 for(troph in c('D', 'H', 'P')) {
     dat <- cbind(byTrophBySite$siteAge[byTrophBySite$trophic==troph], 
-                 sad.zscore[byTrophBySite$trophic==troph])
+                 sad.obs[byTrophBySite$trophic==troph])
     dat <- dat[order(dat[, 1]), ]
     plot(dat, type='b', log='x', 
          ylim=c(0, 2.25), 
