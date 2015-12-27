@@ -41,6 +41,17 @@ byTrophBySite <- cbind(byTrophBySite, t(apply(byTrophBySite[, 1:2], 1, function(
 
 names(byTrophBySite)[10:12] <- c('N.none', 'S.none', 'E.none')
 
+## logLik and associated Z for SAD
+sad.z <- lapply(mete.byTS, function(x) logLikZ(x$sad, nrep=999, return.sim=TRUE, type='cumulative'))
+byTrophBySite$sad.z <- sapply(sad.z, function(x) x$z)
+byTrophBySite$sad.ll <- sapply(sad.z, function(x) x$obs)
+
+
+## logLik and associated Z for IPD
+ipd.z <- lapply(mete.byTS, function(x) logLikZ(x$ipd, nrep=999, return.sim=TRUE, type='cumulative'))
+byTrophBySite$ipd.z <- sapply(ipd.z, function(x) x$z)
+byTrophBySite$ipd.ll <- sapply(ipd.z, function(x) x$obs)
+
 ## ===========================================
 ## plot SAD
 ## ===========================================
@@ -74,19 +85,15 @@ dev.off()
 
 
 ## plot z-score for SAD
-## get z scores for SAD
-sad.z <- lapply(mete.byTS, function(x) logLikZ(x$sad, nrep=999, return.sim=TRUE, type='cumulative'))
-sad.zscore <- sapply(sad.z, function(x) x$z)
-sad.obs <- sapply(sad.z, function(x) x$obs)
 
-pdf('fig_sad_zscore.pdf', width=5, height=5)
+pdf('fig_sad_zscore.pdf', width=5, height=5)  # z-score by age
 
 layout(matrix(1:3, nrow=3))
 par(mar=rep(0.1, 4), oma=c(4, 4, 0, 2)+0.1)
 
 for(troph in c('D', 'H', 'P')) {
     dat <- cbind(byTrophBySite$siteAge[byTrophBySite$trophic==troph], 
-                 sad.obs[byTrophBySite$trophic==troph])
+                 byTrophBySite$sad.z[byTrophBySite$trophic==troph])
     dat <- dat[order(dat[, 1]), ]
     plot(dat, type='b', log='x', 
          ylim=c(0, 2.25), 
@@ -98,6 +105,14 @@ logAxis(1)
 axis(1, at=5)
 
 dev.off()
+
+## z by invaded 
+
+palette(c(D = 'black', H = 'green', P = 'blue'))
+
+with(byTrophBySite, plot(N.none, sad.z, col=trophic))
+
+with(byTrophBySite, plot(E.none, ipd.z, col=trophic))
 
 
 ## ===========================================
