@@ -52,6 +52,15 @@ ipd.z <- lapply(mete.byTS, function(x) logLikZ(x$ipd, nrep=999, return.sim=TRUE,
 byTrophBySite$ipd.z <- sapply(ipd.z, function(x) x$z)
 byTrophBySite$ipd.ll <- sapply(ipd.z, function(x) x$obs)
 
+
+## ===========================================
+## byTrophBySiteByTree shows pretty much everything 
+## is METEish and doesn't change with age...frankly 
+## going to ignore cause can't rule out small sample 
+## sizes
+## ===========================================
+
+
 ## ===========================================
 ## plot SAD
 ## ===========================================
