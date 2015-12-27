@@ -3,6 +3,7 @@
 ## ===========================================
 
 devtools::load_all('~/Dropbox/Research/meteR')
+library(vegan)
 
 setwd('~/Dropbox/Research/hawaiiMETE')
 
@@ -51,6 +52,35 @@ byTrophBySite$sad.ll <- sapply(sad.z, function(x) x$obs)
 ipd.z <- lapply(mete.byTS, function(x) logLikZ(x$ipd, nrep=999, return.sim=TRUE, type='cumulative'))
 byTrophBySite$ipd.z <- sapply(ipd.z, function(x) x$z)
 byTrophBySite$ipd.ll <- sapply(ipd.z, function(x) x$obs)
+
+
+## beta diversity (need to normalize...)
+
+## convenience function for making site by spp matrix
+samp2sitespp <- function(site, spp, abund) {
+    x <- tapply(abund, list(site=site, spp=spp), sum)
+    x[is.na(x)] <- 0
+    
+    return(x)
+}
+
+byTrophBySite$bdiv <- apply(byTrophBySite[, 1:2], 1, function(m) {
+    dat <- x[x$trophic == m['trophic'] & x$Site == m['Site'], ]
+    mat <- samp2sitespp(dat$Tree, dat$SpeciesCode, dat$Abundance)
+    obs <- mean(vegdist(mat, 'chao'))
+    
+    sim <- replicate(999, {
+        newdat <- dat
+        newdat$Tree <- sample(newdat$Tree)
+        mat <- samp2sitespp(newdat$Tree, newdat$SpeciesCode, newdat$Abundance)
+        return(mean(vegdist(mat, 'chao')))
+    })
+    sim <- c(sim, obs)
+    
+    return((obs - mean(sim))/sd(sim))
+})
+
+with(byTrophBySite, plot(bdiv, sad.z, col=trophic))
 
 
 ## ===========================================
