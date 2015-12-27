@@ -22,6 +22,13 @@ mete.byTS <- apply(byTrophBySite, 1, function(s) {
     return(out)
 })
 
+## mete objects divided by trophic, site and tree
+mete.byTST <- apply(byTrophBySiteByTree, 1, function(s) {
+    dat <- x[x$trophic==s[1] & x$Site==s[2], ]
+    esf <- meteESF(dat$SpeciesCode, dat$Abundance, dat$IND_BIOM^0.75)
+    out <- list(sad=sad(esf), ipd=ipd(esf))
+    return(out)
+})
 
 ## save mete objects
 save(mete.byTS, byTrophBySite, byTrophBySiteByTree, x, file='mete.byTS.RData')
