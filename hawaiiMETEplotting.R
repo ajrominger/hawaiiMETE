@@ -19,6 +19,15 @@ byTrophBySite <- cbind(byTrophBySite,
 byTrophBySite$siteAge <- site.info$age[match(byTrophBySite$Site, site.info$code)]
 byTrophBySite$islandAge <- site.info$island.age[match(byTrophBySite$Site, site.info$code)]
 
+apply(byTrophBySite[, 1:2], 1, function(m) {
+    this.match <- x[paste(m['trophic'], m['Site']) == paste(x$trophic, x$Site), drop=FALSE]
+    Nnon <- sum((this.match$Origin != 'endemic' | this.match$Origin != 'indigenous')) / nrow(this.match)
+    Snon <- length(unique(this.match$SpeciesCode[this.match$Origin != 'endemic' | this.match$Origin != 'indigenous'])) / 
+        length(unique(this.match$SpeciesCode))
+    ## do E then be done
+})
+
+
 ## ===========================================
 ## plot SAD
 ## ===========================================
