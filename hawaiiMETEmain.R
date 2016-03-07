@@ -14,7 +14,7 @@ byTrophBySite <- byTrophBySite[!(byTrophBySite$trophic %in% c('U', 'T')), ]
 byTrophBySiteByTree <- unique(x[, c('trophic','Site', 'Tree')])
 byTrophBySiteByTree <- byTrophBySiteByTree[!(byTrophBySiteByTree$trophic %in% c('U', 'T')), ]
 
-bySite <- unique(x$Site)
+bySite <- data.frame(Site=unique(x$Site))
 
 bySiteByTree <- unique(x[, c('Site', 'Tree')])
 
@@ -38,6 +38,19 @@ mete.byTST <- apply(byTrophBySiteByTree, 1, function(s) {
     }  
     return(out)
 })
+
+mete.byS <- lapply(bySite$Site, function(s) {
+    dat <- x[x$Site==s, ]
+    this.n <- sum(dat$Abundance)
+    if(sum(dat$Abundance) > 50) {
+        esf <- meteESF(dat$SpeciesCode, dat$Abundance, dat$IND_BIOM^0.75)
+        out <- list(sad=sad(esf), ipd=ipd(esf))  
+    } else {
+        out <- NULL
+    }  
+    return(out)
+})
+
 
 ## save mete objects
 save(mete.byTS, byTrophBySite, byTrophBySiteByTree, x, file='mete.byTS.RData')
