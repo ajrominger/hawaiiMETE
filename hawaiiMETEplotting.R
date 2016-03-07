@@ -15,46 +15,96 @@ source('~/R_functions/logAxis.R')
 
 
 ## ===========================================
-## organize all info into byTrophBySite
+## function organize all info into byTrophBySite or similar data.frame
 ## ===========================================
 
-## state vars
-byTrophBySite <- cbind(byTrophBySite,
-                       t(sapply(mete.byTS, function(x) {
-                           c(x$sad$state.var, maxN=max(x$sad$data), maxE=max(x$ipd$data))
-                       })))
-
-## ages
-byTrophBySite$siteAge <- site.info$age[match(byTrophBySite$Site, site.info$code)]
-byTrophBySite$islandAge <- site.info$island.age[match(byTrophBySite$Site, site.info$code)]
-
-## proportion non-native
-byTrophBySite <- cbind(byTrophBySite, t(apply(byTrophBySite[, 1:2], 1, function(m) {
-    this.match <- x[paste(m['trophic'], m['Site']) == paste(x$trophic, x$Site), , drop=FALSE]
-    Nnon <- 1 - sum((this.match$Origin == 'endemic' | this.match$Origin == 'indigenous')) / nrow(this.match)
-    Snon <- 1 - length(unique(this.match$SpeciesCode[this.match$Origin == 'endemic' | this.match$Origin == 'indigenous'])) / 
-        length(unique(this.match$SpeciesCode))
-    Enon <- 1 - sum(this.match$IND_BIOM[this.match$Origin == 'endemic' | this.match$Origin == 'indigenous']^0.75) /
-        sum(this.match$IND_BIOM^0.75)
+composeData <- function(dat, mete) {
+    ## state vars
+    dat <- cbind(dat, 
+                 t(sapply(mete, function(x) {
+                     c(x$sad$state.var, maxN=max(x$sad$data), maxE=max(x$ipd$data))
+                 })))
     
-    return(c(Nnon, Snon, Enon))
-})))
-
-names(byTrophBySite)[10:12] <- c('N.none', 'S.none', 'E.none')
-
-## logLik and associated Z for SAD
-sad.z <- lapply(mete.byTS, function(x) logLikZ(x$sad, nrep=999, return.sim=TRUE, type='cumulative'))
-byTrophBySite$sad.z <- sapply(sad.z, function(x) x$z)
-byTrophBySite$sad.ll <- sapply(sad.z, function(x) x$obs)
-
-
-## logLik and associated Z for IPD
-ipd.z <- lapply(mete.byTS, function(x) logLikZ(x$ipd, nrep=999, return.sim=TRUE, type='cumulative'))
-byTrophBySite$ipd.z <- sapply(ipd.z, function(x) x$z)
-byTrophBySite$ipd.ll <- sapply(ipd.z, function(x) x$obs)
-
-
-## beta diversity (need to normalize...)
+    ## ages
+    dat$siteAge <- site.info$age[match(dat$Site, site.info$code)]
+    dat$islandAge <- site.info$island.age[match(dat$Site, site.info$code)]
+    
+    ## prop non-native
+    if('trophic' %in% names(dat)) {
+        matchString <- function(m) paste(m['trophic'], m['Site'])
+        matchTable <- paste(x$trophic, x$Site)
+    } else {
+        matchString <- function(m) paste(m['Site'])
+        matchTable <- x$Site
+    }
+    
+    if('Tree' %in% names(dat)) {
+        matchStringFun <- function(m) paste(matchString(m), m['Tree'])
+        matchTable <- paste(matchTable, x$Tree)
+    } else {
+        matchStringFun <- matchString
+    }
+    
+    dat <- cbind(dat, t(apply(dat, 1, function(m) {
+        this.match <- x[matchStringFun(m) == matchTable, , drop=FALSE]
+        Nnon <- 1 - sum((this.match$Origin == 'endemic' | this.match$Origin == 'indigenous')) / nrow(this.match)
+        Snon <- 1 - length(unique(this.match$SpeciesCode[this.match$Origin == 'endemic' | this.match$Origin == 'indigenous'])) / 
+            length(unique(this.match$SpeciesCode))
+        Enon <- 1 - sum(this.match$IND_BIOM[this.match$Origin == 'endemic' | this.match$Origin == 'indigenous']^0.75) /
+            sum(this.match$IND_BIOM^0.75)
+        
+        return(c(N.none=Nnon, S.none=Snon, E.none=Enon))
+    })))
+    
+    
+    ## normalized beta-diversity
+    if('trophic' %in% names(dat)) {
+        matchString <- function(m) paste(m['trophic'], m['Site'])
+        matchTable <- paste(x$trophic, x$Site)
+    } else {
+        matchString <- function(m) paste(m['Site'])
+        matchTable <- x$Site
+    }
+    
+    dat$bdiv <- apply(dat, 1, function(m) {
+        this.match <- x[matchString(m) == matchTable, , drop=FALSE]
+        mat <- samp2sitespp(this.match$Tree, this.match$SpeciesCode, this.match$Abundance)
+        
+        if('Tree' %in% names(dat)) {
+            obs <- NA
+        } else {
+            obs <- mean(vegdist(mat, 'chao'))
+        }
+        
+        
+        sim <- replicate(999, {
+            if('Tree' %in% names(dat)) {
+                return(NA)
+            } else {
+                newdat <- this.match
+                newdat$Tree <- sample(newdat$Tree)
+                mat <- samp2sitespp(newdat$Tree, newdat$SpeciesCode, newdat$Abundance)
+                return(mean(vegdist(mat, 'chao')))
+            }
+        })
+        sim <- c(sim, obs)
+        
+        return((obs - mean(sim))/sd(sim))
+    })
+    
+    ## logLik and associated Z for SAD
+    sad.z <- lapply(mete, function(x) logLikZ(x$sad, nrep=999, return.sim=FALSE, type='cumulative'))
+    dat$sad.z <- sapply(sad.z, function(x) x$z)
+    dat$sad.ll <- sapply(sad.z, function(x) x$obs)
+    
+    
+    ## logLik and associated Z for IPD
+    ipd.z <- lapply(mete, function(x) logLikZ(x$ipd, nrep=999, return.sim=FALSE, type='cumulative'))
+    dat$ipd.z <- sapply(ipd.z, function(x) x$z)
+    dat$ipd.ll <- sapply(ipd.z, function(x) x$obs)
+    
+    return(dat)
+}
 
 ## convenience function for making site by spp matrix
 samp2sitespp <- function(site, spp, abund) {
@@ -64,23 +114,20 @@ samp2sitespp <- function(site, spp, abund) {
     return(x)
 }
 
-byTrophBySite$bdiv <- apply(byTrophBySite[, 1:2], 1, function(m) {
-    dat <- x[x$trophic == m['trophic'] & x$Site == m['Site'], ]
-    mat <- samp2sitespp(dat$Tree, dat$SpeciesCode, dat$Abundance)
-    obs <- mean(vegdist(mat, 'chao'))
-    
-    sim <- replicate(999, {
-        newdat <- dat
-        newdat$Tree <- sample(newdat$Tree)
-        mat <- samp2sitespp(newdat$Tree, newdat$SpeciesCode, newdat$Abundance)
-        return(mean(vegdist(mat, 'chao')))
-    })
-    sim <- c(sim, obs)
-    
-    return((obs - mean(sim))/sd(sim))
-})
 
+## orgainize byTrophBySite
+byTrophBySite <- composeData(byTrophBySite, mete.byTS)
+
+## explore beta-diversity
 with(byTrophBySite, plot(bdiv, sad.z, col=trophic))
+
+
+## same for bySite
+bySite <- composeData(bySite, mete.byS)
+with(bySite, plot(bdiv, sad.z))
+with(bySite, plot(siteAge, sad.z, log='x'))
+
+plot(mete.byS[[which(bySite$Site=='KA')]]$sad, ptype='rad', log='y')
 
 
 ## ===========================================
