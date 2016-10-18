@@ -1,56 +1,38 @@
 ## load needed packages
-devtools::load_all('~/Dropbox/Research/meteR')
+library(meteR)
+library(parallel)
 
 setwd('~/Dropbox/Research/hawaiiMETE')
 
 ## read cleaned data from Gruner 2007 Syst Biol
-x <- read.csv('~/Research/data/Gruner/gruner_clean.csv')
+grun <- read.csv('~/Research/data/Gruner/gruner_clean.csv')
 
 
 ## data.frames holding all unique combinations of trophic, site and tree factors
-byTrophBySite <- unique(x[, c('trophic', 'Site')])
+byTrophBySite <- unique(grun[, c('trophic', 'Site')])
 byTrophBySite <- byTrophBySite[!(byTrophBySite$trophic %in% c('U', 'T')), ]
+row.names(byTrophBySite) <- NULL
 
-byTrophBySiteByTree <- unique(x[, c('trophic','Site', 'Tree')])
-byTrophBySiteByTree <- byTrophBySiteByTree[!(byTrophBySiteByTree$trophic %in% c('U', 'T')), ]
-
-bySite <- data.frame(Site=unique(x$Site))
-
-bySiteByTree <- unique(x[, c('Site', 'Tree')])
 
 ## mete objects divided by trophic and site
-mete.byTS <- apply(byTrophBySite, 1, function(s) {
-    dat <- x[x$trophic==s[1] & x$Site==s[2], ]
+mete.byTS <- mclapply(1:nrow(byTrophBySite), mc.cores = 6, FUN = function(i) {
+    dat <- grun[grun$trophic == byTrophBySite[i, 1] & grun$Site == byTrophBySite[i, 2], ]
     esf <- meteESF(dat$SpeciesCode, dat$Abundance, dat$IND_BIOM^0.75)
-    out <- list(sad=sad(esf), ipd=ipd(esf))
-    return(out)
-})
-
-## mete objects divided by trophic, site and tree
-mete.byTST <- apply(byTrophBySiteByTree, 1, function(s) {
-    dat <- x[x$trophic==s[1] & x$Site==s[2] & x$Tree==as.numeric(s[3]), ]
-    this.n <- sum(dat$Abundance)
-    if(sum(dat$Abundance) > 50) {
-        esf <- meteESF(dat$SpeciesCode, dat$Abundance, dat$IND_BIOM^0.75)
-        out <- list(sad=sad(esf), ipd=ipd(esf))  
-    } else {
-        out <- NULL
-    }  
-    return(out)
-})
-
-mete.byS <- lapply(bySite$Site, function(s) {
-    dat <- x[x$Site==s, ]
-    this.n <- sum(dat$Abundance)
-    if(sum(dat$Abundance) > 50) {
-        esf <- meteESF(dat$SpeciesCode, dat$Abundance, dat$IND_BIOM^0.75)
-        out <- list(sad=sad(esf), ipd=ipd(esf))  
-    } else {
-        out <- NULL
-    }  
+    out <- list(sad = sad(esf), ipd = ipd(esf))
     return(out)
 })
 
 
-## save mete objects
-save(mete.byTS, byTrophBySite, byTrophBySiteByTree, x, file='mete.byTS.RData')
+## loop over METE objects and calculate z scores
+zz <- mclapply(mete.byTS, mc.cores = 6, FUN = function(x) {
+    sad.z <- logLikZ(x$sad, nrep = 999)$z
+    ipd.z <- logLikZ(x$ipd, nrep = 999)$z
+    
+    return(c(sad.z = sad.z, ipd.z = ipd.z))
+})
+
+## combine z scores with summary table
+byTrophBySite <- cbind(byTrophBySite, do.call(rbind, zz))
+
+## save mete and summary objects
+save(mete.byTS, byTrophBySite, grun, file = 'mete.byTS.RData')
