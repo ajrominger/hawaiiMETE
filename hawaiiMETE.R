@@ -23,6 +23,9 @@ mete.byTS <- mclapply(1:nrow(byTrophBySite), mc.cores = 6, FUN = function(i) {
 })
 
 
+## add state var to summary table
+byTrophBySite <- cbind(byTrophBySite, t(sapply(mete.byTS, function(x) x[[1]]$state.var)))
+
 ## loop over METE objects and calculate z scores
 zz <- mclapply(mete.byTS, mc.cores = 6, FUN = function(x) {
     sad.z <- logLikZ(x$sad, nrep = 999)$z
@@ -35,4 +38,4 @@ zz <- mclapply(mete.byTS, mc.cores = 6, FUN = function(x) {
 byTrophBySite <- cbind(byTrophBySite, do.call(rbind, zz))
 
 ## save mete and summary objects
-save(mete.byTS, byTrophBySite, grun, file = 'mete.byTS.RData')
+save(mete.byTS, byTrophBySite, grun, file = 'hawaiiMETE.RData')
