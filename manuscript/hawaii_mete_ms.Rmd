@@ -1,0 +1,36 @@
+---
+title: "The Maximum Entropy Theory of Ecology reveals nonequilibrium ecology and evolution across the Hawaiian chronosequence"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+# Introduction
+
+- Non-equilib ecology and evolution
+- METE
+- Hawaii
+
+# Methods
+
+- Sites
+    - data source
+    - collection methods
+    - guilds
+    - body size
+    - age
+- METE
+    - basic overview
+    - specific analyses
+        - MSE
+        - beta diversity
+
+# Results
+
+# Discussion
+
+# Conclusion
+
+# References
