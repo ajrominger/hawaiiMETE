@@ -1,16 +1,18 @@
 ---
 title: "The Maximum Entropy Theory of Ecology reveals nonequilibrium ecology and evolution across the Hawaiian chronosequence"
 output: pdf_document
+bibliography: hawaiiMETE.bib
+cls: ecology-letters.csl
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 ```
 
 # Introduction
 
 - Non-equilib ecology and evolution
-- METE
+- METE [@harte2011]
 - Hawaii
 
 # Methods
@@ -28,6 +30,72 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
         - beta diversity
 
 # Results
+```{r, analysis_setup}
+library(meteR)
+library(socorro)
+
+grun <- read.csv('../data/gruner_clean.csv', as.is = TRUE)
+grunSite <- read.csv('../data/guner_site.csv', as.is = TRUE)
+
+# METE objects and state vars
+meteByST <- plyr::dlply(grun[grun$trophic %in% c('P', 'H', 'D'), ], c('Site', 'trophic'), 
+                        function(x) {
+    meteESF(x$SpeciesCode, x$Abundance, x$IND_BIOM^0.75, minE = min(grun$IND_BIOM)^0.75)
+})
+
+stateVarByST <- lapply(meteByST, function(x) c(x$state.var, 
+                                               nmax = max(tapply(x$data$n, x$data$s, sum)),
+                                               emax = max(x$data$e)))
+stateVarByST <- as.data.frame(do.call(rbind, stateVarByST))
+```
+
+```{r, fig_sad_raw, fig.width = 7, fig.height = 4.5, fig.align = 'center'}
+layout(matrix(1:15, nrow = 3))
+par(mar = rep(0.3, 4), oma = c(3.5, 3.5, 2, 2), mgp = c(2, 0.75, 0))
+
+for(i in grunSite$code) {
+    for(j in c('P', 'H', 'D')) {
+        thisMETE <- meteByST[[paste(i, j, sep = '.')]]
+        plot(sad(thisMETE), ptype = 'rad', log = 'xy', add.legend = FALSE, 
+             xlim = c(1, max(stateVarByST$S0)), ylim = c(1, max(stateVarByST$nmax)), 
+             xaxt = 'n', yaxt = 'n')
+        
+        if(i == 'KA') mtext(j, side = 4, line = 1)
+        if(j == 'P') mtext(i, side = 3, line = 1)
+        if(i == 'VO') logAxis(2, expLab = TRUE)
+        if(j == 'D') logAxis(1, expLab = TRUE)
+    }
+}
+
+mtext('Rank', side = 1, outer = TRUE, line = 2)
+mtext('Abundance', side = 2, outer = TRUE, line = 2)
+```
+
+```{r, fig_ipd_raw, fig.width = 7, fig.height = 4.5, fig.align = 'center'}
+layout(matrix(1:15, nrow = 3))
+par(mar = rep(0.3, 4), oma = c(3.5, 3.5, 2, 2), mgp = c(2, 0.75, 0))
+
+for(i in grunSite$code) {
+    for(j in c('P', 'H', 'D')) {
+        thisMETE <- meteByST[[paste(i, j, sep = '.')]]
+        plot(ipd(thisMETE), ptype = 'rad', log = 'xy', add.legend = FALSE, 
+             xlim = c(1, max(stateVarByST$N0)), ylim = c(1, max(stateVarByST$emax)), 
+             xaxt = 'n', yaxt = 'n')
+        
+        if(i == 'KA') mtext(j, side = 4, line = 1)
+        if(j == 'P') mtext(i, side = 3, line = 1)
+        if(i == 'VO') logAxis(2, expLab = TRUE)
+        if(j == 'D') logAxis(1, expLab = TRUE)
+    }
+}
+
+mtext('Rank', side = 1, outer = TRUE, line = 2)
+mtext('Metabolic rate', side = 2, outer = TRUE, line = 2)
+```
+
+```{r}
+# get jack-knifed MSE: explore removing k individuals where k is, e.g. =~ num bugs per tree
+```
 
 # Discussion
 
