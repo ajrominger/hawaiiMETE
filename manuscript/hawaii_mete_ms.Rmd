@@ -33,9 +33,10 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 ```{r, analysis_setup}
 library(meteR)
 library(socorro)
+library(hawaiiMETE)
 
-grun <- read.csv('../data/gruner_clean.csv', as.is = TRUE)
-grunSite <- read.csv('../data/guner_site.csv', as.is = TRUE)
+# grun <- read.csv('../data/gruner_clean.csv', as.is = TRUE)
+# grunSite <- read.csv('../data/guner_site.csv', as.is = TRUE)
 
 # METE objects and state vars
 meteByST <- plyr::dlply(grun[grun$trophic %in% c('P', 'H', 'D'), ], c('Site', 'trophic'), 
