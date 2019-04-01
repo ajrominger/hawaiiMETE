@@ -93,10 +93,9 @@ mtext('Rank', side = 1, outer = TRUE, line = 2)
 mtext('Metabolic rate', side = 2, outer = TRUE, line = 2)
 ```
 
-```{r, sadBoot}
+```{r, sadBoot, eval = FALSE}
 # get bootstrapped MSE for SAD
 sadBootByST <- lapply(meteByST, function(x) {
-    newx <- meteESF(1:x$state.var['S0'], sad(x)$r(x$state.var['S0']))
     b <- bootMSE.meteDist(sad(x), type = 'cumulative', relative = FALSE, log = TRUE)
     o <- c(mse(sad(x), type = 'cumulative', relative = FALSE, log = TRUE), mean(b), quantile(b, probs = c(0.025, 0.975)))
     names(o) <- c('obs', 'mean', 'ciLo', 'ciHi')
@@ -118,6 +117,34 @@ for(i in c('P', 'H', 'D')) {
                                 y0 = dat$ciLo, y1 = dat$ciHi), 
          pch = 21, bg = 'white', log = 'x')
 }
+```
+
+```{r, sadZ, fig.width=4, fig.height=6}
+sadZByST <- lapply(meteByST, function(x) {
+    z <- logLikZ(sad(x))$z
+    o <- c(logLik(sad(x)), z)
+    names(o) <- c('obs', 'z')
+    return(o)
+})
+sadZByST <- as.data.frame(do.call(rbind, sadZByST))
+sadZByST <- cbind(site = gsub('\\..*', '', rownames(sadZByST)), 
+                     troph = gsub('.*\\.', '', rownames(sadZByST)), 
+                     sadZByST)
+rownames(sadZByST) <- NULL
+
+layout(matrix(1:3, nrow = 1))
+par(mar = c(3, 0.5, 0, 0), oma = c(0.5, 3, 0.5, 0.5), mgp = c(2, 0.75, 0))
+
+for(i in c('P', 'H', 'D')) {
+    plot(grunSite$age[match(grunSite$code, sadZByST$site[sadZByST$troph == i])], 
+         sadZByST$z[sadZByST$troph == i], log = 'x', xaxt = 'n', yaxt = 'n', 
+         ylim = range(sadZByST$z))
+    logAxis(1, expLab = TRUE)
+    if(i == 'P') axis(2)
+}
+
+mtext('Age', side = 1, outer = TRUE, line = 0)
+mtext('log Likelihood z^2', side = 2, outer = TRUE, line = 2)
 ```
 
 # Discussion
